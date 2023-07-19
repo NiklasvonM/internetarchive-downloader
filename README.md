@@ -2,9 +2,9 @@
 
 This Python script uses multithreading and multiprocessing in conjunction with the [Internet Archive Python Library](https://archive.org/services/docs/api/internetarchive/) to provide bulk downloads of files associated with Internet Archive ([archive.org](https://archive.org/)) items and collections, with optional interrupted download resumption and file hash verification. Wayback Machine ([web.archive.org](https://web.archive.org/)) pages are not supported by this script.
 
+Internet Archive is a non-profit organisation. Please consider making a donation. http://archive.org/donate
 
 ## Getting started
-Internet Archive is a non-profit organisation. Please consider making a donation. http: //archive.org/donate
 
 ### Prerequisites
 
