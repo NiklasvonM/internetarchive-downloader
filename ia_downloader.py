@@ -16,7 +16,7 @@ def main() -> None:
     run_time = datetime.datetime.now()
     datetime_string = run_time.strftime("%Y%m%d_%H%M%S")
 
-    args = ConfigArgs()
+    args = ConfigArgs.from_config_file()
     #args = parser.parse_args()
 
     # Set up logging

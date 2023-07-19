@@ -1,105 +1,55 @@
+from typing import Optional, Literal, List, Tuple, Union
 import yaml
+from pydantic import BaseModel, root_validator, Extra
 
-class ConfigArgs:
 
-    allowed_args = [
-        "command",
-        "logfolder",
-        "identifiers",
-        "search",
-        "threads",
-        "verify",
-        "split",
-        "filefilters",
-        "invertfilefiltering",
-        "credentials",
-        "hashfile",
-        "cacherefresh",
-        "data_folders",
-        "nopaths",
-        "output_folder",
-        "resume"
-    ]
-    command = "download"
-    logfolder = "ia_downloader_logs"
-    identifiers = None
-    search = ""
-    threads = 5
-    verify = False
-    split = 1
-    filefilters = None
-    invertfilefiltering = False
-    credentials = None
-    hashfile = None
-    cacherefresh = False
-    data_folders = None
-    nopaths = False
-    output_folder = "output"
-    resume = False
+class ConfigArgs(BaseModel):
+    command: Literal["download", "verify"] = "download"
+    logfolder: str = "ia_downloader_logs"
+    identifiers: Optional[List] = None
+    search: str = ""
+    threads: Literal[1, 2, 3, 4, 5] = 5
+    """
+    May not be greater than 5 to reduce iarchive server load
+    """
+    split: Literal[1, 2, 3, 4, 5] = 1
+    """
+    May not be greater than 5 to reduce iarchive server load
+    Default: 1
+    """
+    verify: bool = False
+    filefilters: Optional[Union[List[str], str]] = None
+    invertfilefiltering: bool = False
+    credentials: Optional[Tuple[str, str]] = None
+    hashfile: Optional[str] = None
+    cacherefresh: bool = False
+    data_folders: Optional[List[str]] = None
+    nopaths: bool = False
+    output_folder: str = "output"
+    resume: bool = False
+    class Config:
+        extra = Extra.ignore # or 'allow' str
 
-    def __init__(self):
-        with open("config/config.yaml", "r", encoding="UTF-8") as config_file:
-            args = yaml.safe_load(config_file)
 
-        self._verify_args(args)
-
-        for key, value in args.items():
-            if key in self.allowed_args:
-                if value is not None:
-                    setattr(self, key, value)
-            else:
-                print(f"Warning: Key '{key}' not allowed and will not be set.")
-
-    def _check_missing_args(self, args):
-        if self.command == "download":
-            self._check_missing_args_download(args)
-        if self.command == "verify":
-            self._check_missing_args_verify(args)
-
-    def _check_missing_args_download(self, args):
-        obligatory_args = [
-            "identifiers"
-        ]
-        for obligatory_arg in obligatory_args:
-            if not obligatory_arg in args.keys():
-                raise ValueError(f"Argument {obligatory_arg} is not supplied in the config file!")
-
-    def _check_missing_args_verify(self, args):
-        obligatory_args = [
-            "identifiers"
-        ]
-        for obligatory_arg in obligatory_args:
-            if not obligatory_arg in args.keys():
-                raise ValueError(f"Argument {obligatory_arg} is not supplied in the config file!")
-
-    def _check_arg_values(self, args):
+    @root_validator(pre=True)
+    @classmethod
+    def _check_arg_values(cls, args):
         #error_message = "Argument %s has received illegal value %s!"
-        assert (args["command"] in ["download", "verify"])
-        assert isinstance(args["logfolder"], str)
         assert len(args["identifiers"]) > 0
-        assert isinstance(args["identifiers"], list)
-        assert all(isinstance(identifier, str) for identifier in args["identifiers"])
-        assert isinstance(args["search"], str)
         assert args["threads"] <= 5 #Reason: Reduce iarchive server load
-        assert isinstance(args["verify"], bool)
         assert args["split"] <= 5 #Reason: Reduce iarchive server load
         assert (args["split"] > 1 & args["threads"] == 1) or args["split"] == 1
         assert (args["credentials"] is None or len(args) == 2)
-        assert isinstance(args["filefilters"], list) | isinstance(args["filefilters"], str)
-        assert isinstance(args["invertfilefiltering"], bool)
-        #assert credentials
-        #assert hashfile
-        assert isinstance(args["cacherefresh"], bool)
-        assert isinstance(args["nopaths"], bool)
-        assert isinstance(args["resume"], bool)
-        #assert data_folders
-        #TODO
-
-    def _verify_args(self, args):
-        self._check_missing_args(args)
-        self._check_arg_values(args)
+        return args
 
     def __contains__(self, item):
         return hasattr(self, item) and self.__getattribute__(item) is not None
 
-
+    @classmethod
+    def from_config_file(cls, config_file_path: str = "config/config.yaml"):
+        """
+        Instantiates the `ConfigArgs` from `config_file_path`.
+        """
+        with open(config_file_path, "r", encoding="UTF-8") as config_file:
+            args = yaml.safe_load(config_file)
+        return ConfigArgs(**args)
