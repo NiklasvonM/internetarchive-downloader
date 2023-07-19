@@ -774,7 +774,11 @@ def verify(
     invert_file_filtering: bool = False,
     quiet: bool = False,
 ) -> bool:
-    """Verify that previously-downloaded files are complete"""
+    """
+    Verify that previously-downloaded files are complete
+    An MD5 hash verification will be performed against the downloaded data
+    and compared against the hash values listed in Internet Archive metadata.
+    """
     if quiet:
         log = logging.getLogger("quiet")
     else:
@@ -792,18 +796,17 @@ def verify(
         # Get comparable dictionaries from both the hash metadata file (i.e. IA-side metadata)
         # and local folder of files (i.e. local-side metadata of previously-downloaded files)
         missing_metadata_items = []
-        if hash_file is not None:
-            try:
-                hashfile_metadata = get_metadata_from_hashfile(
-                    hash_file, hash_flag, identifiers, file_filters, invert_file_filtering
-                )
-            except ValueError:
-                log.error(
-                    "Hash file '%s' does not match expected format - cannot be used for"
-                    " verification",
-                    hash_file
-                )
-                return False
+        try:
+            hashfile_metadata = get_metadata_from_hashfile(
+                hash_file, hash_flag, identifiers, file_filters, invert_file_filtering
+            )
+        except ValueError:
+            log.error(
+                "Hash file '%s' does not match expected format - cannot be used for"
+                " verification",
+                hash_file
+            )
+            return False
         else:
             subfolders = [
                 item
