@@ -5,7 +5,7 @@ import multiprocessing.pool
 import os
 import pathlib
 from typing import Optional, List
-from src.ia_downloader import hash_pool_initializer
+from src.various_fct import hash_pool_initializer
 from src.download_queue import DownloadQueue
 from src.item_metadata import MetadataItem
 
@@ -59,7 +59,6 @@ def download(
             processes=multiprocessing.cpu_count() - 1,
             initializer=hash_pool_initializer)
 
-    cache_folder = os.path.join(cache_parent_folder, identifier)
     item = MetadataItem.from_cache(
         identifier=identifier,
         cache_parent_folder=cache_parent_folder,
